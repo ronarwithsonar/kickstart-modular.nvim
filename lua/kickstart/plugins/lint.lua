@@ -2,8 +2,29 @@ return {
 
   { -- Linting
     'mfussenegger/nvim-lint',
+    dependencies = {
+      -- Auto-install linters via Mason
+      'williamboman/mason.nvim',
+      'WhoIsSethDaniel/mason-tool-installer.nvim',
+    },
     event = { 'BufReadPre', 'BufNewFile' },
     config = function()
+      -- [[ Linters to Auto-Install ]]
+      -- List of linters that should be automatically installed via Mason
+      -- when setting up Neovim on a new machine. Add linters here to ensure
+      -- they're available without manual installation.
+      local linters_to_install = {
+        'markdownlint', -- Markdown linter
+      }
+
+      -- [[ Auto-Install Linters ]]
+      -- Automatically install linters listed above using mason-tool-installer
+      require('mason-tool-installer').setup {
+        ensure_installed = linters_to_install,
+      }
+
+      -- [[ Configure nvim-lint ]]
+      -- Set up linters for each filetype
       local lint = require 'lint'
       lint.linters_by_ft = {
         markdown = { 'markdownlint' },

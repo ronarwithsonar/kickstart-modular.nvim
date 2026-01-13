@@ -596,6 +596,89 @@ dependencies = {
 2. Parent plugin loads after all dependencies
 3. Parent's `config` function runs last
 
+### Auto-Installing Tools with Mason
+
+**mason-tool-installer pattern**: Automatically install formatters, linters, and other tools on fresh setup.
+
+**When to use**:
+- Formatters (conform.nvim)
+- Linters (nvim-lint)
+- DAP adapters (nvim-dap)
+- Any Mason-installable tool that plugins depend on
+
+**Pattern implementation**:
+
+```lua
+return {
+  {
+    'plugin/name',
+    dependencies = {
+      'williamboman/mason.nvim',
+      'WhoIsSethDaniel/mason-tool-installer.nvim',
+    },
+    config = function()
+      -- Define tools to auto-install
+      local tools_to_install = {
+        'stylua',
+        'prettierd',
+        'markdownlint',
+      }
+
+      -- Auto-install tools
+      require('mason-tool-installer').setup {
+        ensure_installed = tools_to_install,
+      }
+
+      -- Configure the plugin
+      require('plugin').setup {
+        -- plugin configuration
+      }
+    end,
+  },
+}
+```
+
+**Real-world examples**:
+- `lua/kickstart/plugins/conform.lua` - Auto-installs formatters (stylua, prettierd)
+- `lua/kickstart/plugins/lint.lua` - Auto-installs linters (markdownlint)
+- `lua/kickstart/plugins/lspconfig.lua` - Auto-installs LSP servers (lua_ls, etc.)
+
+**Key points**:
+- **Use `config` not `opts`**: Need to call mason-tool-installer before plugin setup
+- **Separate concerns**: Keep LSP servers, formatters, and linters in their respective plugins
+- **Explicit lists**: Makes dependencies clear and reproducible across machines
+- **Dependencies required**: Must include both mason.nvim and mason-tool-installer
+- **Load order matters**: mason-tool-installer.setup() must run before plugin.setup()
+
+**Benefits**:
+- **Reproducible setup**: Fresh machine automatically installs required tools
+- **Self-documenting**: Tool list shows what's needed at a glance
+- **No manual steps**: Just clone dotfiles and open Neovim
+- **Version control**: Track tool requirements alongside config
+
+**Example: Adding a new formatter**:
+
+1. Add formatter to `formatters_to_install` array in conform.lua
+2. Add formatter to `formatters_by_ft` table
+3. Restart Neovim - formatter auto-installs
+4. No `:Mason` manual installation needed
+
+```lua
+-- In conform.lua
+local formatters_to_install = {
+  'stylua',
+  'prettierd',
+  'black', -- NEW: Python formatter
+}
+
+-- Later in config
+formatters_by_ft = {
+  lua = { 'stylua' },
+  markdown = { 'prettierd', 'prettier', stop_after_first = true },
+  python = { 'black' }, -- NEW: Use black for Python
+}
+```
+
 ---
 
 ## Keymap Conventions
